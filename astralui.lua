@@ -1,8 +1,8 @@
 --[[
-    ⭐ Astral UI Library V8: Absolute Layout Fix ⭐
-    - Strict sizing and positioning of containers.
-    - Added UIAspectRatioConstraint for window stability.
-    - Explicitly forces the Page to fill the Content area.
+    ⭐ Astral UI Library V9: Deep Element Injection Fix ⭐
+    - Adds UIPadding to the Page for guaranteed margins.
+    - Explicitly sets Tab Button size with pixel offsets.
+    - Simplified element sizes to avoid ListLayout conflicts.
 ]]
 
 local Astral = {}
@@ -66,7 +66,7 @@ end
 -- // MAIN LIBRARY \\ --
 function Astral.MakeWindow(Configuration)
     local Settings = {
-        Name = Configuration.Name or "Astral UI V8",
+        Name = Configuration.Name or "Astral UI V9",
         ToggleKey = Configuration.ToggleKey or Enum.KeyCode.RightControl
     }
     
@@ -74,7 +74,7 @@ function Astral.MakeWindow(Configuration)
     local IsMobile = ViewportSize.X < 600
 
     local AstralScreen = Instance.new("ScreenGui")
-    AstralScreen.Name = "AstralLib_V8"
+    AstralScreen.Name = "AstralLib_V9"
     AstralScreen.ResetOnSpawn = false
     ProtectGui(AstralScreen)
 
@@ -88,11 +88,10 @@ function Astral.MakeWindow(Configuration)
     MainGlow.Color = STYLE.AccentColor; MainGlow.Thickness = 2; MainGlow.Transparency = 0.5
     MainGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     
-    -- Aspect Ratio Constraint for stability on different screens
-    Instance.new("UIAspectRatioConstraint", MainFrame).AspectRatio = 550/350 
-
+    -- Removed AspectRatio constraint as it can sometimes fight with manual sizing
+    
     if IsMobile then
-        MainFrame.Size = UDim2.new(0.9, 0, 0, 315) -- Fixed pixel height on mobile 
+        MainFrame.Size = UDim2.new(0.9, 0, 0, 315)
         MainFrame.Position = UDim2.new(0.05, 0, 0.25, 0)
     else
         MainFrame.Size = UDim2.new(0, 550, 0, 350)
@@ -114,25 +113,26 @@ function Astral.MakeWindow(Configuration)
     CloseBtn.Text = "X"; CloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50); CloseBtn.BackgroundTransparency = 1
     CloseBtn.MouseButton1Click:Connect(function() AstralScreen:Destroy() end)
 
-    -- Toggle Logic (Standard logic)
-
     -- // CONTENT CONTAINERS \\ --
     local TabContainer = Instance.new("ScrollingFrame", MainFrame)
     TabContainer.BackgroundColor3 = STYLE.SecondaryColor
     TabContainer.Position = UDim2.new(0, 10, 0, 50)
-    TabContainer.Size = UDim2.new(0, 120, 1, -60) -- 120 width sidebar, -60 from main frame height (40 top bar + 20 padding)
+    TabContainer.Size = UDim2.new(0, 120, 1, -60)
     TabContainer.ScrollBarThickness = 0
     Instance.new("UICorner", TabContainer).CornerRadius = UDim.new(0, 6)
 
     local TabList = Instance.new("UIListLayout", TabContainer)
     TabList.Padding = UDim.new(0, STYLE.Padding)
     TabList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    TabList.VerticalAlignment = Enum.VerticalAlignment.Top -- Ensure tabs start at the top
+    TabList.VerticalAlignment = Enum.VerticalAlignment.Top 
+    
+    -- UIPadding to ensure tabs are not pressed against the edge
+    Instance.new("UIPadding", TabContainer).PaddingTop = UDim.new(0, STYLE.Padding)
 
     local Content = Instance.new("Frame", MainFrame)
     Content.BackgroundTransparency = 1
     Content.Position = UDim2.new(0, 140, 0, 50)
-    Content.Size = UDim2.new(1, -150, 1, -60) -- CRITICAL: Leaves 140 width for sidebar + 10 padding, and 10 padding right. Height is correct.
+    Content.Size = UDim2.new(1, -150, 1, -60) 
 
     -- // TAB & ELEMENTS API \\ --
     local Lib = {}
@@ -141,34 +141,36 @@ function Astral.MakeWindow(Configuration)
     function Lib:MakeTab(Config)
         local TabBtn = Instance.new("TextButton", TabContainer)
         TabBtn.Name = Config.Name .. "TabButton"
-        TabBtn.Size = UDim2.new(1, -10, 0, 35); TabBtn.Text = Config.Name; 
+        -- CRITICAL FIX: Simplified X-Size to 100% minus pixel offset padding
+        TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = Config.Name; 
         TabBtn.BackgroundTransparency = 1; TabBtn.TextColor3 = STYLE.TextColor
         
-        -- Page Frame (The actual content area for the tab)
         local Page = Instance.new("ScrollingFrame", Content)
         Page.Name = Config.Name .. "Page"
-        Page.Size = UDim2.new(1, 0, 1, 0) -- CRITICAL: Page must fill the entire Content frame
+        Page.Size = UDim2.new(1, 0, 1, 0)
         Page.BackgroundTransparency = 1; Page.Visible = false
         Page.ScrollBarThickness = 3
         Page.ScrollBarImageColor3 = STYLE.AccentColor
         
+        -- CRITICAL FIX: Adding UIPadding to the Page itself
+        Instance.new("UIPadding", Page).PaddingAll = UDim.new(0, STYLE.Padding * 2) -- Extra padding on all sides
+
         local PageList = Instance.new("UIListLayout", Page)
         PageList.Padding = UDim.new(0, STYLE.Padding)
         PageList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-        PageList.VerticalAlignment = Enum.VerticalAlignment.Top -- Ensure elements start at the top of the page
+        PageList.VerticalAlignment = Enum.VerticalAlignment.Top
         
         PageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            Page.CanvasSize = UDim2.new(0,0,0, PageList.AbsoluteContentSize.Y + 20)
+            -- Adjust canvas size based on content height + padding
+            Page.CanvasSize = UDim2.new(0, 0, 0, PageList.AbsoluteContentSize.Y + 4 * STYLE.Padding) 
         end)
         
-        -- Tab Selection Logic
+        -- Tab Selection Logic (Standard logic)
         TabBtn.MouseButton1Click:Connect(function()
             if CurrentTab then CurrentTab.Visible = false end
-            
             for _, v in pairs(TabContainer:GetChildren()) do 
                 if v:IsA("TextButton") then v.TextColor3 = STYLE.TextColor end
             end
-            
             Page.Visible = true
             TabBtn.TextColor3 = STYLE.AccentColor
             CurrentTab = Page
@@ -182,7 +184,8 @@ function Astral.MakeWindow(Configuration)
         function Elements:AddButton(Config)
             local BtnFrame = Instance.new("Frame", Page)
             BtnFrame.BackgroundColor3 = STYLE.SecondaryColor
-            BtnFrame.Size = UDim2.new(1, -20, 0, STYLE.ElementHeight) 
+            -- CRITICAL FIX: X-Size is now 100% minus the padding from the UIPadding element (1 - 2 * Padding)
+            BtnFrame.Size = UDim2.new(1, 0, 0, STYLE.ElementHeight) 
             Instance.new("UICorner", BtnFrame).CornerRadius = UDim.new(0, 6)
             
             local BtnGlow = Instance.new("UIStroke", BtnFrame)
@@ -203,7 +206,7 @@ function Astral.MakeWindow(Configuration)
             local Toggled = Config.Default or false
             local Frame = Instance.new("Frame", Page)
             Frame.BackgroundColor3 = STYLE.SecondaryColor
-            Frame.Size = UDim2.new(1, -20, 0, STYLE.ElementHeight) 
+            Frame.Size = UDim2.new(1, 0, 0, STYLE.ElementHeight) -- CRITICAL FIX: X-Size is 1, no offsets
             Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
             
             local Text = Instance.new("TextLabel", Frame)
