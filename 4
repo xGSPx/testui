@@ -1,4 +1,4 @@
--- // GEMINI UI LIBRARY v7.0 (Sections, Dividers & Paragraphs)
+-- // GEMINI UI LIBRARY v12.0 (PROTECTED LOADER + DRAGGABLE TOGGLE + SCROLLING DROPDOWNS)
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -8,6 +8,7 @@ if CoreGui:FindFirstChild("GeminiLib") then CoreGui.GeminiLib:Destroy() end
 
 local IsInteracting = false
 
+-- // Icon Database
 local function GetIcon(name)
     local icons = {
         ["sword"] = "rbxassetid://10723306472",
@@ -18,6 +19,7 @@ local function GetIcon(name)
     return icons[name:lower()] or "rbxassetid://4483362458"
 end
 
+-- // Improved Dragging (Universal for Main & Toggle)
 local function Dragify(Frame)
     local dragToggle, dragStart, startPos, dragInput
     Frame.InputBegan:Connect(function(input)
@@ -35,64 +37,102 @@ local function Dragify(Frame)
     end)
 end
 
+-- // RAYFIELD-STYLE NOTIFICATIONS
+function Library:Notify(cfg)
+    local NoteMain = CoreGui:FindFirstChild("GeminiLib") or Instance.new("ScreenGui", CoreGui)
+    NoteMain.Name = "GeminiLib"
+    local Note = Instance.new("Frame", NoteMain)
+    Note.Size = UDim2.new(0, 280, 0, 75); Note.Position = UDim2.new(1, 20, 1, -100); Note.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Instance.new("UICorner", Note); Instance.new("UIStroke", Note).Color = Color3.fromRGB(180, 0, 255)
+    local T = Instance.new("TextLabel", Note); T.Size = UDim2.new(1, -20, 0, 30); T.Position = UDim2.new(0, 15, 0, 8); T.Text = cfg.Title; T.TextColor3 = Color3.fromRGB(180, 0, 255); T.Font = Enum.Font.GothamBold; T.BackgroundTransparency = 1; T.TextXAlignment = Enum.TextXAlignment.Left; T.TextSize = 16
+    local C = Instance.new("TextLabel", Note); C.Size = UDim2.new(1, -20, 0, 25); C.Position = UDim2.new(0, 15, 0, 38); C.Text = cfg.Content; C.TextColor3 = Color3.fromRGB(200, 200, 200); C.Font = Enum.Font.Gotham; C.BackgroundTransparency = 1; C.TextXAlignment = Enum.TextXAlignment.Left; C.TextSize = 14
+    Note:TweenPosition(UDim2.new(1, -300, 1, -100), "Out", "Quint", 0.6)
+    task.wait(cfg.Duration or 3); Note:TweenPosition(UDim2.new(1, 20, 1, -100), "In", "Quint", 0.6); task.delay(0.6, function() Note:Destroy() end)
+end
+
 function Library:CreateWindow(Settings)
+    -- // INITIAL BOOT ANIMATION
+    Library:Notify({Title = Settings.Name, Content = "Checking license and loading assets...", Duration = 3})
+    task.wait(1.5)
+
     local Main = Instance.new("ScreenGui", CoreGui); Main.Name = "GeminiLib"
+    
+    -- // MAIN DRAGGABLE TOGGLE (MOBILE SUPPORT)
+    local MobileBtn = Instance.new("TextButton", Main)
+    MobileBtn.Size = UDim2.new(0, 50, 0, 50); MobileBtn.Position = UDim2.new(0, 20, 0, 20); MobileBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15); MobileBtn.Text = "G"; MobileBtn.TextColor3 = Color3.fromRGB(180, 0, 255); MobileBtn.Font = Enum.Font.GothamBold; MobileBtn.TextSize = 24
+    Instance.new("UICorner", MobileBtn).CornerRadius = UDim.new(1, 0); Dragify(MobileBtn)
+
     local MainFrame = Instance.new("Frame", Main)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10); MainFrame.Size = UDim2.new(0, 560, 0, 480); MainFrame.Position = UDim2.new(0.5, -280, 0.5, -240)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10); MainFrame.Size = UDim2.new(0, 580, 0, 460); MainFrame.Position = UDim2.new(0.5, -290, 0.5, -230)
     Instance.new("UICorner", MainFrame); Dragify(MainFrame)
+    MobileBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
 
-    local Header = Instance.new("Frame", MainFrame); Header.Size = UDim2.new(1, 0, 0, 45); Header.BackgroundTransparency = 1
-    local Title = Instance.new("TextLabel", Header); Title.Text = "  " .. Settings.Name; Title.Size = UDim2.new(1, 0, 1, 0); Title.TextColor3 = Color3.fromRGB(180, 0, 255); Title.Font = Enum.Font.GothamBold; Title.TextSize = 18; Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Left
+    local Title = Instance.new("TextLabel", MainFrame)
+    Title.Size = UDim2.new(1, -20, 0, 45); Title.Position = UDim2.new(0, 15, 0, 5); Title.Text = Settings.Name:upper(); Title.TextColor3 = Color3.fromRGB(180, 0, 255); Title.Font = Enum.Font.GothamBold; Title.TextSize = 18; Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Left
 
-    local Sidebar = Instance.new("Frame", MainFrame); Sidebar.Size = UDim2.new(0, 140, 1, -60); Sidebar.Position = UDim2.new(0, 5, 0, 50); Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Instance.new("UICorner", Sidebar)
-    Instance.new("UIListLayout", Sidebar).Padding = UDim.new(0, 5)
+    local Sidebar = Instance.new("Frame", MainFrame); Sidebar.Size = UDim2.new(0, 150, 1, -70); Sidebar.Position = UDim2.new(0, 10, 0, 55); Sidebar.BackgroundColor3 = Color3.fromRGB(14, 14, 14); Instance.new("UICorner", Sidebar)
+    local SidebarList = Instance.new("UIListLayout", Sidebar); SidebarList.SortOrder = Enum.SortOrder.LayoutOrder; SidebarList.Padding = UDim.new(0, 5); SidebarList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    local Container = Instance.new("Frame", MainFrame); Container.Size = UDim2.new(1, -165, 1, -70); Container.Position = UDim2.new(0, 155, 0, 55); Container.BackgroundTransparency = 1
+    local Container = Instance.new("Frame", MainFrame); Container.Size = UDim2.new(1, -185, 1, -70); Container.Position = UDim2.new(0, 170, 0, 55); Container.BackgroundTransparency = 1
+
+    function Library:Destroy() Main:Destroy() end
 
     local Tabs = {}
     function Tabs:CreateTab(name, icon)
-        local Page = Instance.new("ScrollingFrame", Container); Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.ScrollBarThickness = 2; Page.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 255)
-        Instance.new("UIListLayout", Page).Padding = UDim.new(0, 8)
+        local Page = Instance.new("ScrollingFrame", Container); Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.ScrollBarThickness = 2; Page.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 255); Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        local PageList = Instance.new("UIListLayout", Page); PageList.SortOrder = Enum.SortOrder.LayoutOrder; PageList.Padding = UDim.new(0, 10); PageList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-        local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, -10, 0, 35); TabBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TabBtn.Text = "      " .. name; TabBtn.TextColor3 = Color3.fromRGB(200, 200, 200); TabBtn.TextXAlignment = Enum.TextXAlignment.Left; Instance.new("UICorner", TabBtn)
+        local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, -12, 0, 40); TabBtn.Text = "         " .. name; TabBtn.TextColor3 = Color3.fromRGB(160, 160, 160); TabBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UICorner", TabBtn); TabBtn.TextXAlignment = Enum.TextXAlignment.Left; TabBtn.Font = Enum.Font.GothamMedium; TabBtn.TextSize = 14
         if icon then
-            local IconImg = Instance.new("ImageLabel", TabBtn); IconImg.Size = UDim2.new(0, 18, 0, 18); IconImg.Position = UDim2.new(0, 8, 0.5, -9); IconImg.BackgroundTransparency = 1; IconImg.Image = GetIcon(icon); IconImg.ImageColor3 = Color3.fromRGB(180,0,255)
+            local I = Instance.new("ImageLabel", TabBtn); I.Size = UDim2.new(0, 20, 0, 20); I.Position = UDim2.new(0, 10, 0.5, -10); I.BackgroundTransparency = 1; I.Image = GetIcon(icon); I.ImageColor3 = Color3.fromRGB(180,0,255)
         end
 
         TabBtn.MouseButton1Click:Connect(function()
             for _, v in pairs(Container:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
             Page.Visible = true
         end)
+        if not FirstPage then Page.Visible = true end
 
         local Elements = {}
+        local OrderCount = 0
+        local function NextOrder() OrderCount = OrderCount + 1 return OrderCount end
 
-        -- // SECTION
-        function Elements:CreateSection(name)
-            local S = Instance.new("TextLabel", Page); S.Size = UDim2.new(1, -10, 0, 25); S.BackgroundTransparency = 1; S.Text = name:upper(); S.TextColor3 = Color3.fromRGB(180, 0, 255); S.Font = Enum.Font.GothamBold; S.TextSize = 13; S.TextXAlignment = Enum.TextXAlignment.Left
+        function Elements:CreateSection(text)
+            local S = Instance.new("TextLabel", Page); S.Size = UDim2.new(1, -10, 0, 35); S.Text = "  " .. text:upper(); S.TextColor3 = Color3.fromRGB(180, 0, 255); S.Font = Enum.Font.GothamBold; S.BackgroundTransparency = 1; S.TextXAlignment = Enum.TextXAlignment.Left; S.LayoutOrder = NextOrder(); S.TextSize = 15
         end
 
-        -- // DIVIDER
         function Elements:CreateDivider()
-            local D = Instance.new("Frame", Page); D.Size = UDim2.new(1, -15, 0, 1); D.BackgroundColor3 = Color3.fromRGB(30, 30, 30); D.BorderSizePixel = 0
+            local DFrame = Instance.new("Frame", Page); DFrame.Size = UDim2.new(1, -10, 0, 10); DFrame.BackgroundTransparency = 1; DFrame.LayoutOrder = NextOrder()
+            local D = Instance.new("Frame", DFrame); D.Size = UDim2.new(1, 0, 0, 2); D.Position = UDim2.new(0, 0, 0.5, -1); D.BackgroundColor3 = Color3.fromRGB(40, 40, 40); D.BorderSizePixel = 0
         end
 
-        -- // PARAGRAPH
-        function Elements:CreateParagraph(title, content)
-            local P = Instance.new("Frame", Page); P.Size = UDim2.new(1, -10, 0, 60); P.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Instance.new("UICorner", P)
-            local T = Instance.new("TextLabel", P); T.Size = UDim2.new(1, -10, 0, 25); T.Position = UDim2.new(0, 5, 0, 2); T.Text = title; T.TextColor3 = Color3.fromRGB(255, 255, 255); T.Font = Enum.Font.GothamBold; T.BackgroundTransparency = 1; T.TextXAlignment = Enum.TextXAlignment.Left
-            local C = Instance.new("TextLabel", P); C.Size = UDim2.new(1, -10, 1, -25); C.Position = UDim2.new(0, 5, 0, 25); C.Text = content; C.TextColor3 = Color3.fromRGB(180, 180, 180); C.Font = Enum.Font.Gotham; C.TextWrapped = true; C.BackgroundTransparency = 1; C.TextXAlignment = Enum.TextXAlignment.Left; C.TextYAlignment = Enum.TextYAlignment.Top
+        function Elements:CreateDropdown(cfg)
+            local D = Instance.new("Frame", Page); D.Size = UDim2.new(1, -10, 0, 40); D.BackgroundColor3 = Color3.fromRGB(18, 18, 18); D.ClipsDescendants = true; D.LayoutOrder = NextOrder(); Instance.new("UICorner", D)
+            local Lbl = Instance.new("TextLabel", D); Lbl.Size = UDim2.new(1, -45, 0, 40); Lbl.Text = "  " .. cfg.Name; Lbl.TextColor3 = Color3.fromRGB(255,255,255); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Left; Lbl.Font = Enum.Font.Gotham; Lbl.TextSize = 14
+            local SideBtn = Instance.new("TextButton", D); SideBtn.Size = UDim2.new(0, 30, 0, 30); SideBtn.Position = UDim2.new(1, -35, 0, 5); SideBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SideBtn.Text = "+"; SideBtn.TextColor3 = Color3.fromRGB(180, 0, 255); Instance.new("UICorner", SideBtn)
             
-            -- Auto-sizing logic
-            P.Size = UDim2.new(1, -10, 0, C.TextBounds.Y + 35)
+            -- // DROPDOWN SCROLLING FIX
+            local ListScroll = Instance.new("ScrollingFrame", D); ListScroll.Size = UDim2.new(1, 0, 0, 150); ListScroll.Position = UDim2.new(0,0,0,40); ListScroll.BackgroundTransparency = 1; ListScroll.ScrollBarThickness = 2; ListScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 255); ListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+            local ListLayout = Instance.new("UIListLayout", ListScroll)
+            
+            local open = false
+            SideBtn.MouseButton1Click:Connect(function()
+                open = not open; SideBtn.Text = open and "-" or "+"; 
+                local targetHeight = open and math.min(40 + (#cfg.Options * 30), 200) or 40
+                TweenService:Create(D, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Size = UDim2.new(1,-10,0, targetHeight)}):Play()
+            end)
+
+            for _, opt in pairs(cfg.Options) do
+                local o = Instance.new("TextButton", ListScroll); o.Size = UDim2.new(1,0,0,30); o.Text = opt; o.BackgroundColor3 = Color3.fromRGB(22,22,22); o.TextColor3 = Color3.fromRGB(200,200,200); o.BorderSizePixel = 0; o.Font = Enum.Font.Gotham; o.TextSize = 13
+                o.MouseButton1Click:Connect(function() cfg.Callback(opt); Lbl.Text = "  " .. cfg.Name .. " [" .. opt .. "]"; open = false; D.Size = UDim2.new(1,-10,0,40); SideBtn.Text = "+" end)
+            end
         end
 
-        -- // BUTTON (Updated with Icon support)
         function Elements:CreateButton(cfg)
-            local B = Instance.new("TextButton", Page); B.Size = UDim2.new(1, -10, 0, 35); B.BackgroundColor3 = Color3.fromRGB(20, 20, 20); B.Text = "  " .. cfg.Name; B.TextColor3 = Color3.fromRGB(255, 255, 255); B.TextXAlignment = Enum.TextXAlignment.Left; Instance.new("UICorner", B)
+            local B = Instance.new("TextButton", Page); B.Size = UDim2.new(1, -10, 0, 40); B.BackgroundColor3 = Color3.fromRGB(18, 18, 18); B.Text = "  " .. cfg.Name; B.TextColor3 = Color3.fromRGB(255, 255, 255); B.TextXAlignment = Enum.TextXAlignment.Left; B.LayoutOrder = NextOrder(); Instance.new("UICorner", B)
             B.MouseButton1Click:Connect(cfg.Callback)
         end
 
-        -- [Other elements (Toggle, Slider, Input, Dropdown) remain from v6.0]
         return Elements
     end
     return Tabs
