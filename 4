@@ -1,32 +1,22 @@
--- // GEMINI UI LIBRARY v3.0 (The Complete Package)
+-- // GEMINI UI LIBRARY v3.1 (Method Fix)
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 
--- // 1. ANTI-MULTI INSTANCE
-if CoreGui:FindFirstChild("GeminiLib") then
-    CoreGui.GeminiLib:Destroy()
-end
+-- // ANTI-MULTI INSTANCE
+if CoreGui:FindFirstChild("GeminiLib") then CoreGui.GeminiLib:Destroy() end
 
--- // 2. UNIVERSAL DRAG SYSTEM (Improved for PC/Mobile)
+-- // UNIVERSAL DRAG SYSTEM
 local function Dragify(Frame)
     local dragToggle, dragStart, startPos, dragInput
     Frame.InputBegan:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-            dragToggle = true
-            dragStart = input.Position
-            startPos = Frame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragToggle = false end
-            end)
+            dragToggle = true; dragStart = input.Position; startPos = Frame.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragToggle = false end end)
         end
     end)
-    Frame.InputChanged:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            dragInput = input
-        end
-    end)
+    Frame.InputChanged:Connect(function(input) if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then dragInput = input end end)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragToggle then
             local delta = input.Position - dragStart
@@ -36,169 +26,101 @@ local function Dragify(Frame)
 end
 
 function Library:CreateWindow(Settings)
-    local Main = Instance.new("ScreenGui", CoreGui)
-    Main.Name = "GeminiLib"
-    Main.ZIndexBehavior = Enum.ZIndexBehavior.Global
-
-    -- // MOBILE TOGGLE BUTTON (DRAGGABLE)
+    local Main = Instance.new("ScreenGui", CoreGui); Main.Name = "GeminiLib"
+    
+    -- Draggable Mobile Toggle
     local ToggleBtn = Instance.new("TextButton", Main)
-    ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
-    ToggleBtn.Position = UDim2.new(0, 20, 0.5, -22)
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    ToggleBtn.Text = "G"
-    ToggleBtn.TextColor3 = Color3.fromRGB(180, 0, 255)
-    ToggleBtn.Font = Enum.Font.GothamBold
-    ToggleBtn.TextSize = 22
-    ToggleBtn.Active = true
+    ToggleBtn.Size = UDim2.new(0, 45, 0, 45); ToggleBtn.Position = UDim2.new(0, 20, 0.5, -22); ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    ToggleBtn.Text = "G"; ToggleBtn.TextColor3 = Color3.fromRGB(180, 0, 255); ToggleBtn.Font = Enum.Font.GothamBold; ToggleBtn.TextSize = 22
     Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
-    Dragify(ToggleBtn) -- Mobile button is now draggable!
+    Dragify(ToggleBtn)
 
     local MainFrame = Instance.new("Frame", Main)
-    MainFrame.Name = "MainFrame"
-    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-    MainFrame.Size = UDim2.new(0, 500, 0, 380)
-    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -190)
-    MainFrame.BorderSizePixel = 0
-    MainFrame.Active = true
+    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10); MainFrame.Size = UDim2.new(0, 500, 0, 380); MainFrame.Position = UDim2.new(0.5, -250, 0.5, -190)
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
     Dragify(MainFrame)
 
-    -- Toggle Logic
-    local function Toggle() MainFrame.Visible = not MainFrame.Visible end
-    ToggleBtn.MouseButton1Click:Connect(Toggle)
-    UserInputService.InputBegan:Connect(function(i, p) if not p and i.KeyCode == Enum.KeyCode.RightControl then Toggle() end end)
-
-    -- Neon Purple Border
-    local Glow = Instance.new("Frame", MainFrame)
-    Glow.Size = UDim2.new(1, 4, 1, 4)
-    Glow.Position = UDim2.new(0, -2, 0, -2)
-    Glow.BackgroundColor3 = Color3.fromRGB(180, 0, 255)
-    Glow.ZIndex = 0
-    Instance.new("UICorner", Glow).CornerRadius = UDim.new(0, 8)
+    ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
 
     local Sidebar = Instance.new("Frame", MainFrame)
-    Sidebar.Size = UDim2.new(0, 130, 1, 0)
-    Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Sidebar.Size = UDim2.new(0, 130, 1, 0); Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Instance.new("UICorner", Sidebar)
 
-    local KillBtn = Instance.new("TextButton", Sidebar)
-    KillBtn.Size = UDim2.new(1, -10, 0, 30)
-    KillBtn.Position = UDim2.new(0, 5, 1, -35)
-    KillBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 255)
-    KillBtn.BackgroundTransparency = 0.6
-    KillBtn.Text = "DESTROY"
-    KillBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Instance.new("UICorner", KillBtn)
-    KillBtn.MouseButton1Click:Connect(function() Main:Destroy() end)
-
     local Container = Instance.new("Frame", MainFrame)
-    Container.Size = UDim2.new(1, -145, 1, -20)
-    Container.Position = UDim2.new(0, 140, 0, 10)
-    Container.BackgroundTransparency = 1
+    Container.Size = UDim2.new(1, -145, 1, -20); Container.Position = UDim2.new(0, 140, 0, 10); Container.BackgroundTransparency = 1
 
     local Tabs = {}
     function Tabs:CreateTab(name)
         local Page = Instance.new("ScrollingFrame", Container)
-        Page.Size = UDim2.new(1, 0, 1, 0)
-        Page.BackgroundTransparency = 1
-        Page.Visible = false
-        Page.ScrollBarThickness = 2
-        Page.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 255)
+        Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.ScrollBarThickness = 0
         Instance.new("UIListLayout", Page).Padding = UDim.new(0, 8)
 
         local TabBtn = Instance.new("TextButton", Sidebar)
-        TabBtn.Size = UDim2.new(1, -10, 0, 30)
-        TabBtn.Position = UDim2.new(0, 5, 0, #Sidebar:GetChildren()*35)
-        TabBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-        TabBtn.Text = name
-        TabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        TabBtn.Size = UDim2.new(1, -10, 0, 30); TabBtn.Position = UDim2.new(0, 5, 0, #Sidebar:GetChildren()*35); TabBtn.Text = name
+        TabBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
         Instance.new("UICorner", TabBtn)
         TabBtn.MouseButton1Click:Connect(function()
-            for _, v in pairs(Container:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
+            for _, v in pairs(Container:GetChildren()) do v.Visible = false end
             Page.Visible = true
         end)
 
         local Elements = {}
-
-        -- BUTTON
+        -- BUTTON METHOD
         function Elements:CreateButton(cfg)
             local B = Instance.new("TextButton", Page)
-            B.Size = UDim2.new(1, -10, 0, 35)
-            B.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-            B.Text = "  " .. cfg.Name
-            B.TextColor3 = Color3.fromRGB(255, 255, 255)
-            B.TextXAlignment = Enum.TextXAlignment.Left
+            B.Size = UDim2.new(1, -10, 0, 35); B.BackgroundColor3 = Color3.fromRGB(20, 20, 20); B.Text = "  " .. cfg.Name
+            B.TextColor3 = Color3.fromRGB(255, 255, 255); B.TextXAlignment = Enum.TextXAlignment.Left
             Instance.new("UICorner", B)
             B.MouseButton1Click:Connect(cfg.Callback)
         end
-
-        -- TOGGLE
+        -- TOGGLE METHOD
         function Elements:CreateToggle(cfg)
             local T = Instance.new("TextButton", Page)
-            T.Size = UDim2.new(1, -10, 0, 35)
-            T.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-            T.Text = "  " .. cfg.Name
-            T.TextColor3 = cfg.CurrentValue and Color3.fromRGB(180, 0, 255) or Color3.fromRGB(255, 255, 255)
-            T.TextXAlignment = Enum.TextXAlignment.Left
+            T.Size = UDim2.new(1, -10, 0, 35); T.BackgroundColor3 = Color3.fromRGB(20, 20, 20); T.Text = "  " .. cfg.Name
+            T.TextColor3 = Color3.fromRGB(255, 255, 255); T.TextXAlignment = Enum.TextXAlignment.Left
             Instance.new("UICorner", T)
-            local s = cfg.CurrentValue or false
-            T.MouseButton1Click:Connect(function()
-                s = not s
-                T.TextColor3 = s and Color3.fromRGB(180, 0, 255) or Color3.fromRGB(255, 255, 255)
-                cfg.Callback(s)
+            local s = false
+            T.MouseButton1Click:Connect(function() s = not s; T.TextColor3 = s and Color3.fromRGB(180, 0, 255) or Color3.fromRGB(255, 255, 255); cfg.Callback(s) end)
+        end
+        -- SLIDER METHOD
+        function Elements:CreateSlider(cfg)
+            local S = Instance.new("Frame", Page); S.Size = UDim2.new(1, -10, 0, 45); S.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            Instance.new("UICorner", S)
+            local L = Instance.new("TextLabel", S); L.Size = UDim2.new(1, 0, 0, 20); L.BackgroundTransparency = 1; L.Text = "  " .. cfg.Name; L.TextColor3 = Color3.fromRGB(255,255,255); L.TextXAlignment = Enum.TextXAlignment.Left
+            local B = Instance.new("Frame", S); B.Size = UDim2.new(1, -20, 0, 6); B.Position = UDim2.new(0, 10, 0, 28); B.BackgroundColor3 = Color3.fromRGB(40,40,40)
+            local F = Instance.new("Frame", B); F.Size = UDim2.new(0, 0, 1, 0); F.BackgroundColor3 = Color3.fromRGB(180, 0, 255)
+            B.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    local function Move()
+                        local p = math.clamp((UserInputService:GetMouseLocation().X - B.AbsolutePosition.X) / B.AbsoluteSize.X, 0, 1)
+                        F.Size = UDim2.new(p, 0, 1, 0)
+                        cfg.Callback(math.floor(cfg.Range[1] + (p * (cfg.Range[2] - cfg.Range[1]))))
+                    end
+                    local con; con = UserInputService.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then Move() end end)
+                    UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then con:Disconnect() end end)
+                    Move()
+                end
             end)
         end
-
-        -- SLIDER
-        function Elements:CreateSlider(cfg)
-            local S = Instance.new("Frame", Page)
-            S.Size = UDim2.new(1, -10, 0, 45)
-            S.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-            Instance.new("UICorner", S)
-            local L = Instance.new("TextLabel", S)
-            L.Size = UDim2.new(1, 0, 0, 20); L.BackgroundTransparency = 1; L.Text = "  " .. cfg.Name; L.TextColor3 = Color3.fromRGB(255,255,255); L.TextXAlignment = Enum.TextXAlignment.Left
-            local B = Instance.new("Frame", S)
-            B.Size = UDim2.new(1, -20, 0, 6); B.Position = UDim2.new(0, 10, 0, 28); B.BackgroundColor3 = Color3.fromRGB(40,40,40)
-            local F = Instance.new("Frame", B)
-            F.Size = UDim2.new(0, 0, 1, 0); F.BackgroundColor3 = Color3.fromRGB(180, 0, 255)
-            local function Update()
-                local p = math.clamp((UserInputService:GetMouseLocation().X - B.AbsolutePosition.X) / B.AbsoluteSize.X, 0, 1)
-                F.Size = UDim2.new(p, 0, 1, 0)
-                cfg.Callback(math.floor(cfg.Range[1] + (p * (cfg.Range[2] - cfg.Range[1]))))
-            end
-            B.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then local m; m = UserInputService.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement then Update() end end) UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then m:Disconnect() end end) end end)
-        end
-
-        -- INPUT
+        -- INPUT METHOD
         function Elements:CreateInput(cfg)
-            local I = Instance.new("Frame", Page)
-            I.Size = UDim2.new(1, -10, 0, 35)
-            I.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            local I = Instance.new("Frame", Page); I.Size = UDim2.new(1, -10, 0, 35); I.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
             Instance.new("UICorner", I)
-            local T = Instance.new("TextBox", I)
-            T.Size = UDim2.new(1, -10, 1, 0); T.Position = UDim2.new(0, 5, 0, 0); T.BackgroundTransparency = 1; T.PlaceholderText = cfg.Placeholder; T.Text = ""; T.TextColor3 = Color3.fromRGB(255,255,255)
+            local T = Instance.new("TextBox", I); T.Size = UDim2.new(1, -10, 1, 0); T.Position = UDim2.new(0, 5, 0, 0); T.BackgroundTransparency = 1; T.PlaceholderText = cfg.Placeholder; T.Text = ""; T.TextColor3 = Color3.fromRGB(255,255,255)
             T.FocusLost:Connect(function() cfg.Callback(T.Text) end)
         end
-
-        -- DROPDOWN
+        -- DROPDOWN METHOD
         function Elements:CreateDropdown(cfg)
-            local D = Instance.new("Frame", Page)
-            D.Size = UDim2.new(1, -10, 0, 35); D.BackgroundColor3 = Color3.fromRGB(20, 20, 20); D.ClipsDescendants = true
+            local D = Instance.new("Frame", Page); D.Size = UDim2.new(1, -10, 0, 35); D.BackgroundColor3 = Color3.fromRGB(20, 20, 20); D.ClipsDescendants = true
             Instance.new("UICorner", D)
-            local DB = Instance.new("TextButton", D)
-            DB.Size = UDim2.new(1, 0, 0, 35); DB.BackgroundTransparency = 1; DB.Text = "  " .. cfg.Name .. " >"; DB.TextColor3 = Color3.fromRGB(180,0,255); DB.TextXAlignment = Enum.TextXAlignment.Left
+            local DB = Instance.new("TextButton", D); DB.Size = UDim2.new(1, 0, 0, 35); DB.BackgroundTransparency = 1; DB.Text = "  " .. cfg.Name; DB.TextColor3 = Color3.fromRGB(180,0,255); DB.TextXAlignment = Enum.TextXAlignment.Left
             local open = false
-            DB.MouseButton1Click:Connect(function()
-                open = not open
-                TweenService:Create(D, TweenInfo.new(0.3), {Size = open and UDim2.new(1,-10,0,150) or UDim2.new(1,-10,0,35)}):Play()
-            end)
+            DB.MouseButton1Click:Connect(function() open = not open; TweenService:Create(D, TweenInfo.new(0.3), {Size = open and UDim2.new(1,-10,0,150) or UDim2.new(1,-10,0,35)}):Play() end)
             for _, opt in pairs(cfg.Options) do
-                local o = Instance.new("TextButton", D)
-                o.Size = UDim2.new(1,0,0,25); o.Text = opt; o.BackgroundColor3 = Color3.fromRGB(30,30,30); o.TextColor3 = Color3.fromRGB(255,255,255)
+                local o = Instance.new("TextButton", D); o.Size = UDim2.new(1,0,0,25); o.Text = opt; o.BackgroundColor3 = Color3.fromRGB(30,30,30); o.TextColor3 = Color3.fromRGB(255,255,255)
                 o.MouseButton1Click:Connect(function() cfg.Callback(opt); DB.Text = "  " .. cfg.Name .. " > " .. opt; open = false; D.Size = UDim2.new(1,-10,0,35) end)
             end
         end
-
         return Elements
     end
     return Tabs
