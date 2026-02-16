@@ -1,4 +1,4 @@
--- // GEMINI UI LIBRARY v14.0 (FIXED ALL MISSING METHODS + TAB SWITCHING)
+-- // GEMINI UI LIBRARY v15.0 | THE COMPLETE FEATURE SET
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -65,31 +65,31 @@ function Library:CreateWindow(Settings)
         local order = 0
         local function getOrder() order = order + 1 return order end
 
+        -- // ELEMENT: SECTION
         function Elements:CreateSection(text)
             local S = Instance.new("TextLabel", Page); S.Size = UDim2.new(1, -10, 0, 35); S.Text = "  " .. text:upper(); S.TextColor3 = Color3.fromRGB(180, 0, 255); S.Font = Enum.Font.GothamBold; S.BackgroundTransparency = 1; S.TextXAlignment = Enum.TextXAlignment.Left; S.LayoutOrder = getOrder(); S.TextSize = 15
         end
 
+        -- // ELEMENT: DIVIDER
         function Elements:CreateDivider()
             local D = Instance.new("Frame", Page); D.Size = UDim2.new(1, -20, 0, 2); D.BackgroundColor3 = Color3.fromRGB(40, 40, 40); D.BorderSizePixel = 0; D.LayoutOrder = getOrder()
         end
 
+        -- // ELEMENT: PARAGRAPH (The missing one!)
         function Elements:CreateParagraph(title, content)
-            local P = Instance.new("Frame", Page); P.Size = UDim2.new(1, -10, 0, 60); P.BackgroundColor3 = Color3.fromRGB(15, 15, 15); P.LayoutOrder = getOrder(); Instance.new("UICorner", P)
+            local P = Instance.new("Frame", Page); P.Size = UDim2.new(1, -10, 0, 65); P.BackgroundColor3 = Color3.fromRGB(15, 15, 15); P.LayoutOrder = getOrder(); Instance.new("UICorner", P)
             local T = Instance.new("TextLabel", P); T.Size = UDim2.new(1, -20, 0, 25); T.Position = UDim2.new(0, 10, 0, 5); T.Text = title; T.TextColor3 = Color3.fromRGB(180, 0, 255); T.Font = Enum.Font.GothamBold; T.TextSize = 14; T.BackgroundTransparency = 1; T.TextXAlignment = Enum.TextXAlignment.Left
-            local C = Instance.new("TextLabel", P); C.Size = UDim2.new(1, -20, 0, 30); C.Position = UDim2.new(0, 10, 0, 25); C.Text = content; C.TextColor3 = Color3.fromRGB(200, 200, 200); C.Font = Enum.Font.Gotham; C.TextSize = 12; C.BackgroundTransparency = 1; C.TextXAlignment = Enum.TextXAlignment.Left; C.TextWrapped = true
+            local C = Instance.new("TextLabel", P); C.Size = UDim2.new(1, -20, 0, 35); C.Position = UDim2.new(0, 10, 0, 25); C.Text = content; C.TextColor3 = Color3.fromRGB(200, 200, 200); C.Font = Enum.Font.Gotham; C.TextSize = 12; C.BackgroundTransparency = 1; C.TextXAlignment = Enum.TextXAlignment.Left; C.TextWrapped = true
         end
 
-        function Elements:CreateButton(cfg)
-            local B = Instance.new("TextButton", Page); B.Size = UDim2.new(1, -10, 0, 40); B.BackgroundColor3 = Color3.fromRGB(18, 18, 18); B.Text = "  " .. cfg.Name; B.TextColor3 = Color3.fromRGB(255, 255, 255); B.TextXAlignment = Enum.TextXAlignment.Left; B.LayoutOrder = getOrder(); Instance.new("UICorner", B)
-            B.MouseButton1Click:Connect(cfg.Callback)
-        end
-
+        -- // ELEMENT: TOGGLE
         function Elements:CreateToggle(cfg)
             local T = Instance.new("TextButton", Page); T.Size = UDim2.new(1, -10, 0, 40); T.BackgroundColor3 = Color3.fromRGB(18, 18, 18); T.Text = "  " .. cfg.Name; T.TextColor3 = Color3.fromRGB(255, 255, 255); T.TextXAlignment = Enum.TextXAlignment.Left; T.LayoutOrder = getOrder(); Instance.new("UICorner", T)
             local s = false
             T.MouseButton1Click:Connect(function() s = not s; T.TextColor3 = s and Color3.fromRGB(180, 0, 255) or Color3.fromRGB(255, 255, 255); cfg.Callback(s) end)
         end
 
+        -- // ELEMENT: SLIDER (The missing one!)
         function Elements:CreateSlider(cfg)
             local S = Instance.new("Frame", Page); S.Size = UDim2.new(1, -10, 0, 50); S.BackgroundColor3 = Color3.fromRGB(18, 18, 18); S.LayoutOrder = getOrder(); Instance.new("UICorner", S)
             local L = Instance.new("TextLabel", S); L.Size = UDim2.new(1, -70, 0, 30); L.BackgroundTransparency = 1; L.Text = "  " .. cfg.Name; L.TextColor3 = Color3.fromRGB(255,255,255); L.TextXAlignment = Enum.TextXAlignment.Left; L.Font = Enum.Font.Gotham; L.TextSize = 14
@@ -112,6 +112,7 @@ function Library:CreateWindow(Settings)
             end)
         end
 
+        -- // ELEMENT: DROPDOWN
         function Elements:CreateDropdown(cfg)
             local D = Instance.new("Frame", Page); D.Size = UDim2.new(1, -10, 0, 40); D.BackgroundColor3 = Color3.fromRGB(18, 18, 18); D.ClipsDescendants = true; D.LayoutOrder = getOrder(); Instance.new("UICorner", D)
             local Lbl = Instance.new("TextLabel", D); Lbl.Size = UDim2.new(1, -45, 0, 40); Lbl.Text = "  " .. cfg.Name; Lbl.TextColor3 = Color3.fromRGB(255,255,255); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Left; Lbl.Font = Enum.Font.Gotham; Lbl.TextSize = 14
@@ -129,11 +130,18 @@ function Library:CreateWindow(Settings)
             end
         end
 
+        -- // ELEMENT: INPUT
         function Elements:CreateInput(cfg)
             local I = Instance.new("Frame", Page); I.Size = UDim2.new(1, -10, 0, 60); I.BackgroundColor3 = Color3.fromRGB(18, 18, 18); I.LayoutOrder = getOrder(); Instance.new("UICorner", I)
             local Tl = Instance.new("TextLabel", I); Tl.Size = UDim2.new(1, 0, 0, 25); Tl.Text = "  " .. cfg.Name; Tl.BackgroundTransparency = 1; Tl.TextColor3 = Color3.fromRGB(255,255,255); Tl.TextXAlignment = Enum.TextXAlignment.Left; Tl.Font = Enum.Font.Gotham; Tl.TextSize = 14
             local Box = Instance.new("TextBox", I); Box.Size = UDim2.new(1, -20, 0, 28); Box.Position = UDim2.new(0, 10, 0, 26); Box.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Box.PlaceholderText = cfg.Placeholder; Box.Text = ""; Box.TextColor3 = Color3.fromRGB(180,0,255); Instance.new("UICorner", Box)
             Box.FocusLost:Connect(function() cfg.Callback(Box.Text) end)
+        end
+
+        -- // ELEMENT: BUTTON
+        function Elements:CreateButton(cfg)
+            local B = Instance.new("TextButton", Page); B.Size = UDim2.new(1, -10, 0, 40); B.BackgroundColor3 = Color3.fromRGB(18, 18, 18); B.Text = "  " .. cfg.Name; B.TextColor3 = Color3.fromRGB(255, 255, 255); B.TextXAlignment = Enum.TextXAlignment.Left; B.LayoutOrder = getOrder(); Instance.new("UICorner", B)
+            B.MouseButton1Click:Connect(cfg.Callback)
         end
 
         return Elements
