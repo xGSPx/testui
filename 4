@@ -1,24 +1,43 @@
--- // GEMINI UI LIBRARY v2.0 (Neon Purple Edition)
+-- // GEMINI UI LIBRARY v2.1 (Mobile + Drag Support)
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
-
--- Auto-cleanup: Deletes any old versions of this UI
-if CoreGui:FindFirstChild("GeminiLib") then
-    CoreGui.GeminiLib:Destroy()
-end
 
 function Library:CreateWindow(Settings)
     local Main = Instance.new("ScreenGui", CoreGui)
     Main.Name = "GeminiLib"
     Main.ResetOnSpawn = false
 
+    -- Mobile Toggle Button
+    local MobileBtn = Instance.new("TextButton", Main)
+    MobileBtn.Name = "MobileToggle"
+    MobileBtn.Size = UDim2.new(0, 50, 0, 50)
+    MobileBtn.Position = UDim2.new(0, 10, 0.5, -25)
+    MobileBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    MobileBtn.Text = "G"
+    MobileBtn.TextColor3 = Color3.fromRGB(180, 0, 255)
+    MobileBtn.TextSize = 25
+    MobileBtn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", MobileBtn).CornerRadius = UDim.new(1, 0)
+    local MobileGlow = Instance.new("Frame", MobileBtn)
+    MobileGlow.Size = UDim2.new(1, 4, 1, 4)
+    MobileGlow.Position = UDim2.new(0, -2, 0, -2)
+    MobileGlow.BackgroundColor3 = Color3.fromRGB(180, 0, 255)
+    MobileGlow.ZIndex = 0
+    Instance.new("UICorner", MobileGlow).CornerRadius = UDim.new(1, 0)
+
     local MainFrame = Instance.new("Frame", Main)
     MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-    MainFrame.Size = UDim2.new(0, 520, 0, 380)
-    MainFrame.Position = UDim2.new(0.5, -260, 0.5, -190)
+    MainFrame.Size = UDim2.new(0, 500, 0, 350)
+    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
+    MainFrame.BorderSizePixel = 0
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+
+    -- Hide/Show Logic
+    MobileBtn.MouseButton1Click:Connect(function()
+        MainFrame.Visible = not MainFrame.Visible
+    end)
 
     -- Neon Purple Border Glow
     local Glow = Instance.new("Frame", MainFrame)
@@ -28,21 +47,55 @@ function Library:CreateWindow(Settings)
     Glow.ZIndex = 0
     Instance.new("UICorner", Glow).CornerRadius = UDim.new(0, 8)
 
+    -- // DRAGGING SCRIPT
+    local dragging, dragInput, dragStart, startPos
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    MainFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
     local Sidebar = Instance.new("Frame", MainFrame)
-    Sidebar.Size = UDim2.new(0, 140, 1, 0)
+    Sidebar.Size = UDim2.new(0, 130, 1, 0)
     Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
 
     local TabHolder = Instance.new("ScrollingFrame", Sidebar)
-    TabHolder.Size = UDim2.new(1, 0, 1, -50)
-    TabHolder.Position = UDim2.new(0, 0, 0, 50)
+    TabHolder.Size = UDim2.new(1, 0, 1, -80)
+    TabHolder.Position = UDim2.new(0, 0, 0, 40)
     TabHolder.BackgroundTransparency = 1
     TabHolder.ScrollBarThickness = 0
     Instance.new("UIListLayout", TabHolder).Padding = UDim.new(0, 5)
 
+    -- Universal Delete Button
+    local DelBtn = Instance.new("TextButton", Sidebar)
+    DelBtn.Size = UDim2.new(1, -10, 0, 30)
+    DelBtn.Position = UDim2.new(0, 5, 1, -35)
+    DelBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    DelBtn.Text = "Delete GUI"
+    DelBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", DelBtn)
+    DelBtn.MouseButton1Click:Connect(function() Main:Destroy() end)
+
     local Container = Instance.new("Frame", MainFrame)
-    Container.Size = UDim2.new(1, -155, 1, -20)
-    Container.Position = UDim2.new(0, 145, 0, 10)
+    Container.Size = UDim2.new(1, -140, 1, -20)
+    Container.Position = UDim2.new(0, 135, 0, 10)
     Container.BackgroundTransparency = 1
 
     local Tabs = {}
@@ -52,64 +105,24 @@ function Library:CreateWindow(Settings)
         Page.BackgroundTransparency = 1
         Page.Visible = false
         Page.ScrollBarThickness = 0
-        Instance.new("UIListLayout", Page).Padding = UDim.new(0, 8)
+        Instance.new("UIListLayout", Page).Padding = UDim.new(0, 5)
 
         local TabBtn = Instance.new("TextButton", TabHolder)
         TabBtn.Size = UDim2.new(1, -10, 0, 30)
-        TabBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+        TabBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         TabBtn.Text = name
         TabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
         Instance.new("UICorner", TabBtn)
 
         TabBtn.MouseButton1Click:Connect(function()
             for _, v in pairs(Container:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
-            for _, v in pairs(TabHolder:GetChildren()) do if v:IsA("TextButton") then v.TextColor3 = Color3.fromRGB(200, 200, 200) end end
             Page.Visible = true
-            TabBtn.TextColor3 = Color3.fromRGB(180, 0, 255)
         end)
 
         local Elements = {}
-
-        -- DROPDOWN ELEMENT
-        function Elements:CreateDropdown(cfg)
-            local DropFrame = Instance.new("Frame", Page)
-            DropFrame.Size = UDim2.new(1, -10, 0, 35)
-            DropFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-            DropFrame.ClipsDescendants = true
-            Instance.new("UICorner", DropFrame)
-
-            local DropBtn = Instance.new("TextButton", DropFrame)
-            DropBtn.Size = UDim2.new(1, 0, 0, 35)
-            DropBtn.BackgroundTransparency = 1
-            DropBtn.Text = "  " .. cfg.Name .. " : " .. (cfg.CurrentOption or "None")
-            DropBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            DropBtn.TextXAlignment = Enum.TextXAlignment.Left
-
-            local open = false
-            DropBtn.MouseButton1Click:Connect(function()
-                open = not open
-                TweenService:Create(DropFrame, TweenInfo.new(0.3), {Size = open and UDim2.new(1, -10, 0, 150) or UDim2.new(1, -10, 0, 35)}):Play()
-            end)
-
-            for _, opt in pairs(cfg.Options) do
-                local o = Instance.new("TextButton", DropFrame)
-                o.Size = UDim2.new(1, 0, 0, 25)
-                o.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-                o.Text = opt
-                o.TextColor3 = Color3.fromRGB(180, 0, 255)
-                o.MouseButton1Click:Connect(function()
-                    DropBtn.Text = "  " .. cfg.Name .. " : " .. opt
-                    cfg.Callback(opt)
-                    open = false
-                    DropFrame.Size = UDim2.new(1, -10, 0, 35)
-                end)
-            end
-        end
-
-        -- TOGGLE ELEMENT
         function Elements:CreateToggle(cfg)
             local Tgl = Instance.new("TextButton", Page)
-            Tgl.Size = UDim2.new(1, -10, 0, 35)
+            Tgl.Size = UDim2.new(1, -5, 0, 35)
             Tgl.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
             Tgl.Text = "  " .. cfg.Name
             Tgl.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -121,6 +134,41 @@ function Library:CreateWindow(Settings)
                 Tgl.TextColor3 = state and Color3.fromRGB(180, 0, 255) or Color3.fromRGB(255, 255, 255)
                 cfg.Callback(state)
             end)
+        end
+
+        function Elements:CreateDropdown(cfg)
+            local DropFrame = Instance.new("Frame", Page)
+            DropFrame.Size = UDim2.new(1, -5, 0, 35)
+            DropFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            DropFrame.ClipsDescendants = true
+            Instance.new("UICorner", DropFrame)
+
+            local DropBtn = Instance.new("TextButton", DropFrame)
+            DropBtn.Size = UDim2.new(1, 0, 0, 35)
+            DropBtn.Text = "  " .. cfg.Name .. " > " .. (cfg.CurrentOption or "None")
+            DropBtn.TextColor3 = Color3.fromRGB(180, 0, 255)
+            DropBtn.TextXAlignment = Enum.TextXAlignment.Left
+            DropBtn.BackgroundTransparency = 1
+
+            local open = false
+            DropBtn.MouseButton1Click:Connect(function()
+                open = not open
+                TweenService:Create(DropFrame, TweenInfo.new(0.3), {Size = open and UDim2.new(1, -5, 0, 150) or UDim2.new(1, -5, 0, 35)}):Play()
+            end)
+
+            for _, opt in pairs(cfg.Options) do
+                local o = Instance.new("TextButton", DropFrame)
+                o.Size = UDim2.new(1, 0, 0, 25)
+                o.Text = opt
+                o.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                o.TextColor3 = Color3.fromRGB(255, 255, 255)
+                o.MouseButton1Click:Connect(function()
+                    DropBtn.Text = "  " .. cfg.Name .. " > " .. opt
+                    cfg.Callback(opt)
+                    open = false
+                    DropFrame.Size = UDim2.new(1, -5, 0, 35)
+                end)
+            end
         end
 
         return Elements
