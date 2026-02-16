@@ -1,4 +1,4 @@
--- // GEMINI UI LIBRARY v12.0 (PROTECTED LOADER + DRAGGABLE TOGGLE + SCROLLING DROPDOWNS)
+-- // GEMINI UI LIBRARY v13.0 (CLEAN STYLE + DRAGGABLE TOGGLE + SCROLLING DROPDOWNS)
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -7,17 +7,6 @@ local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("GeminiLib") then CoreGui.GeminiLib:Destroy() end
 
 local IsInteracting = false
-
--- // Icon Database
-local function GetIcon(name)
-    local icons = {
-        ["sword"] = "rbxassetid://10723306472",
-        ["eye"] = "rbxassetid://10723343385",
-        ["settings"] = "rbxassetid://10723350052",
-        ["info"] = "rbxassetid://10723346959"
-    }
-    return icons[name:lower()] or "rbxassetid://4483362458"
-end
 
 -- // Universal Drag Function
 local function Dragify(Frame)
@@ -77,24 +66,34 @@ function Library:CreateWindow(Settings)
     function Library:Destroy() Main:Destroy() end
 
     local Tabs = {}
-    function Tabs:CreateTab(name, icon)
+    function Tabs:CreateTab(name)
         local Page = Instance.new("ScrollingFrame", Container); Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.ScrollBarThickness = 2; Page.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 255); Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
         local PageList = Instance.new("UIListLayout", Page); PageList.SortOrder = Enum.SortOrder.LayoutOrder; PageList.Padding = UDim.new(0, 10); PageList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-        local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, -12, 0, 40); TabBtn.Text = "         " .. name; TabBtn.TextColor3 = Color3.fromRGB(160, 160, 160); TabBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UICorner", TabBtn); TabBtn.TextXAlignment = Enum.TextXAlignment.Left; TabBtn.Font = Enum.Font.GothamMedium; TabBtn.TextSize = 14
-        if icon then
-            local I = Instance.new("ImageLabel", TabBtn); I.Size = UDim2.new(0, 20, 0, 20); I.Position = UDim2.new(0, 10, 0.5, -10); I.BackgroundTransparency = 1; I.Image = GetIcon(icon); I.ImageColor3 = Color3.fromRGB(180,0,255)
-        end
-
+        local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, -12, 0, 40); TabBtn.Text = " " .. name; TabBtn.TextColor3 = Color3.fromRGB(160, 160, 160); TabBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UICorner", TabBtn); TabBtn.TextXAlignment = Enum.TextXAlignment.Left; TabBtn.Font = Enum.Font.GothamMedium; TabBtn.TextSize = 14
+        
         TabBtn.MouseButton1Click:Connect(function()
             for _, v in pairs(Container:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
             Page.Visible = true
         end)
-        if not FirstPage then Page.Visible = true end
+        
+        -- Logic to set first tab visible
+        local isFirst = true
+        for _, v in pairs(Container:GetChildren()) do if v:IsA("ScrollingFrame") and v ~= Page then isFirst = false end end
+        if isFirst then Page.Visible = true end
 
         local Elements = {}
         local OrderCount = 0
         local function NextOrder() OrderCount = OrderCount + 1 return OrderCount end
+
+        function Elements:CreateSection(text)
+            local S = Instance.new("TextLabel", Page); S.Size = UDim2.new(1, -10, 0, 35); S.Text = "  " .. text:upper(); S.TextColor3 = Color3.fromRGB(180, 0, 255); S.Font = Enum.Font.GothamBold; S.BackgroundTransparency = 1; S.TextXAlignment = Enum.TextXAlignment.Left; S.LayoutOrder = NextOrder(); S.TextSize = 15
+        end
+
+        function Elements:CreateButton(cfg)
+            local B = Instance.new("TextButton", Page); B.Size = UDim2.new(1, -10, 0, 40); B.BackgroundColor3 = Color3.fromRGB(18, 18, 18); B.Text = "  " .. cfg.Name; B.TextColor3 = Color3.fromRGB(255, 255, 255); B.TextXAlignment = Enum.TextXAlignment.Left; B.LayoutOrder = NextOrder(); Instance.new("UICorner", B)
+            B.MouseButton1Click:Connect(cfg.Callback)
+        end
 
         function Elements:CreateDropdown(cfg)
             local D = Instance.new("Frame", Page); D.Size = UDim2.new(1, -10, 0, 40); D.BackgroundColor3 = Color3.fromRGB(18, 18, 18); D.ClipsDescendants = true; D.LayoutOrder = NextOrder(); Instance.new("UICorner", D)
@@ -107,7 +106,7 @@ function Library:CreateWindow(Settings)
             local open = false
             SideBtn.MouseButton1Click:Connect(function()
                 open = not open; SideBtn.Text = open and "-" or "+"; 
-                local targetHeight = open and math.min(40 + (#cfg.Options * 30), 200) or 40
+                local targetHeight = open and math.min(40 + (#cfg.Options * 30), 190) or 40
                 TweenService:Create(D, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Size = UDim2.new(1,-10,0, targetHeight)}):Play()
             end)
 
@@ -117,13 +116,10 @@ function Library:CreateWindow(Settings)
             end
         end
 
-        function Elements:CreateSection(text)
-            local S = Instance.new("TextLabel", Page); S.Size = UDim2.new(1, -10, 0, 35); S.Text = "  " .. text:upper(); S.TextColor3 = Color3.fromRGB(180, 0, 255); S.Font = Enum.Font.GothamBold; S.BackgroundTransparency = 1; S.TextXAlignment = Enum.TextXAlignment.Left; S.LayoutOrder = NextOrder(); S.TextSize = 15
-        end
-
-        function Elements:CreateButton(cfg)
-            local B = Instance.new("TextButton", Page); B.Size = UDim2.new(1, -10, 0, 40); B.BackgroundColor3 = Color3.fromRGB(18, 18, 18); B.Text = "  " .. cfg.Name; B.TextColor3 = Color3.fromRGB(255, 255, 255); B.TextXAlignment = Enum.TextXAlignment.Left; B.LayoutOrder = NextOrder(); Instance.new("UICorner", B)
-            B.MouseButton1Click:Connect(cfg.Callback)
+        function Elements:CreateToggle(cfg)
+            local T = Instance.new("TextButton", Page); T.Size = UDim2.new(1, -10, 0, 40); T.BackgroundColor3 = Color3.fromRGB(18, 18, 18); T.Text = "  " .. cfg.Name; T.TextColor3 = Color3.fromRGB(255, 255, 255); T.TextXAlignment = Enum.TextXAlignment.Left; T.LayoutOrder = NextOrder(); Instance.new("UICorner", T); T.Font = Enum.Font.Gotham; T.TextSize = 14
+            local s = false
+            T.MouseButton1Click:Connect(function() s = not s; T.TextColor3 = s and Color3.fromRGB(180, 0, 255) or Color3.fromRGB(255, 255, 255); cfg.Callback(s) end)
         end
 
         return Elements
