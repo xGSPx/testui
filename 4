@@ -19,7 +19,7 @@ local function GetIcon(name)
     return icons[name:lower()] or "rbxassetid://4483362458"
 end
 
--- // Improved Dragging (Universal for Main & Toggle)
+-- // Universal Drag Function
 local function Dragify(Frame)
     local dragToggle, dragStart, startPos, dragInput
     Frame.InputBegan:Connect(function(input)
@@ -37,7 +37,7 @@ local function Dragify(Frame)
     end)
 end
 
--- // RAYFIELD-STYLE NOTIFICATIONS
+-- // Notification System
 function Library:Notify(cfg)
     local NoteMain = CoreGui:FindFirstChild("GeminiLib") or Instance.new("ScreenGui", CoreGui)
     NoteMain.Name = "GeminiLib"
@@ -51,13 +51,12 @@ function Library:Notify(cfg)
 end
 
 function Library:CreateWindow(Settings)
-    -- // INITIAL BOOT ANIMATION
     Library:Notify({Title = Settings.Name, Content = "Checking license and loading assets...", Duration = 3})
-    task.wait(1.5)
+    task.wait(1)
 
     local Main = Instance.new("ScreenGui", CoreGui); Main.Name = "GeminiLib"
     
-    -- // MAIN DRAGGABLE TOGGLE (MOBILE SUPPORT)
+    -- // Draggable Mobile Button
     local MobileBtn = Instance.new("TextButton", Main)
     MobileBtn.Size = UDim2.new(0, 50, 0, 50); MobileBtn.Position = UDim2.new(0, 20, 0, 20); MobileBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15); MobileBtn.Text = "G"; MobileBtn.TextColor3 = Color3.fromRGB(180, 0, 255); MobileBtn.Font = Enum.Font.GothamBold; MobileBtn.TextSize = 24
     Instance.new("UICorner", MobileBtn).CornerRadius = UDim.new(1, 0); Dragify(MobileBtn)
@@ -97,21 +96,11 @@ function Library:CreateWindow(Settings)
         local OrderCount = 0
         local function NextOrder() OrderCount = OrderCount + 1 return OrderCount end
 
-        function Elements:CreateSection(text)
-            local S = Instance.new("TextLabel", Page); S.Size = UDim2.new(1, -10, 0, 35); S.Text = "  " .. text:upper(); S.TextColor3 = Color3.fromRGB(180, 0, 255); S.Font = Enum.Font.GothamBold; S.BackgroundTransparency = 1; S.TextXAlignment = Enum.TextXAlignment.Left; S.LayoutOrder = NextOrder(); S.TextSize = 15
-        end
-
-        function Elements:CreateDivider()
-            local DFrame = Instance.new("Frame", Page); DFrame.Size = UDim2.new(1, -10, 0, 10); DFrame.BackgroundTransparency = 1; DFrame.LayoutOrder = NextOrder()
-            local D = Instance.new("Frame", DFrame); D.Size = UDim2.new(1, 0, 0, 2); D.Position = UDim2.new(0, 0, 0.5, -1); D.BackgroundColor3 = Color3.fromRGB(40, 40, 40); D.BorderSizePixel = 0
-        end
-
         function Elements:CreateDropdown(cfg)
             local D = Instance.new("Frame", Page); D.Size = UDim2.new(1, -10, 0, 40); D.BackgroundColor3 = Color3.fromRGB(18, 18, 18); D.ClipsDescendants = true; D.LayoutOrder = NextOrder(); Instance.new("UICorner", D)
             local Lbl = Instance.new("TextLabel", D); Lbl.Size = UDim2.new(1, -45, 0, 40); Lbl.Text = "  " .. cfg.Name; Lbl.TextColor3 = Color3.fromRGB(255,255,255); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Left; Lbl.Font = Enum.Font.Gotham; Lbl.TextSize = 14
             local SideBtn = Instance.new("TextButton", D); SideBtn.Size = UDim2.new(0, 30, 0, 30); SideBtn.Position = UDim2.new(1, -35, 0, 5); SideBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SideBtn.Text = "+"; SideBtn.TextColor3 = Color3.fromRGB(180, 0, 255); Instance.new("UICorner", SideBtn)
             
-            -- // DROPDOWN SCROLLING FIX
             local ListScroll = Instance.new("ScrollingFrame", D); ListScroll.Size = UDim2.new(1, 0, 0, 150); ListScroll.Position = UDim2.new(0,0,0,40); ListScroll.BackgroundTransparency = 1; ListScroll.ScrollBarThickness = 2; ListScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 255); ListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
             local ListLayout = Instance.new("UIListLayout", ListScroll)
             
@@ -126,6 +115,10 @@ function Library:CreateWindow(Settings)
                 local o = Instance.new("TextButton", ListScroll); o.Size = UDim2.new(1,0,0,30); o.Text = opt; o.BackgroundColor3 = Color3.fromRGB(22,22,22); o.TextColor3 = Color3.fromRGB(200,200,200); o.BorderSizePixel = 0; o.Font = Enum.Font.Gotham; o.TextSize = 13
                 o.MouseButton1Click:Connect(function() cfg.Callback(opt); Lbl.Text = "  " .. cfg.Name .. " [" .. opt .. "]"; open = false; D.Size = UDim2.new(1,-10,0,40); SideBtn.Text = "+" end)
             end
+        end
+
+        function Elements:CreateSection(text)
+            local S = Instance.new("TextLabel", Page); S.Size = UDim2.new(1, -10, 0, 35); S.Text = "  " .. text:upper(); S.TextColor3 = Color3.fromRGB(180, 0, 255); S.Font = Enum.Font.GothamBold; S.BackgroundTransparency = 1; S.TextXAlignment = Enum.TextXAlignment.Left; S.LayoutOrder = NextOrder(); S.TextSize = 15
         end
 
         function Elements:CreateButton(cfg)
