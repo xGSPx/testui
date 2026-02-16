@@ -1,4 +1,4 @@
--- // GEMINI UI LIBRARY v14.0 (FIXED ALL MISSING METHODS)
+-- // GEMINI UI LIBRARY v14.0 (FIXED ALL MISSING METHODS + TAB SWITCHING)
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -8,7 +8,6 @@ if CoreGui:FindFirstChild("GeminiLib") then CoreGui.GeminiLib:Destroy() end
 
 local IsInteracting = false
 
--- // Dragging Logic
 local function Dragify(Frame)
     local dragToggle, dragStart, startPos, dragInput
     Frame.InputBegan:Connect(function(input)
@@ -26,20 +25,7 @@ local function Dragify(Frame)
     end)
 end
 
-function Library:Notify(cfg)
-    local NoteMain = CoreGui:FindFirstChild("GeminiLib") or Instance.new("ScreenGui", CoreGui)
-    NoteMain.Name = "GeminiLib"
-    local Note = Instance.new("Frame", NoteMain)
-    Note.Size = UDim2.new(0, 280, 0, 75); Note.Position = UDim2.new(1, 20, 1, -100); Note.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    Instance.new("UICorner", Note); Instance.new("UIStroke", Note).Color = Color3.fromRGB(180, 0, 255)
-    local T = Instance.new("TextLabel", Note); T.Size = UDim2.new(1, -20, 0, 30); T.Position = UDim2.new(0, 15, 0, 8); T.Text = cfg.Title; T.TextColor3 = Color3.fromRGB(180, 0, 255); T.Font = Enum.Font.GothamBold; T.BackgroundTransparency = 1; T.TextXAlignment = Enum.TextXAlignment.Left; T.TextSize = 16
-    local C = Instance.new("TextLabel", Note); C.Size = UDim2.new(1, -20, 0, 25); C.Position = UDim2.new(0, 15, 0, 38); C.Text = cfg.Content; C.TextColor3 = Color3.fromRGB(200, 200, 200); C.Font = Enum.Font.Gotham; C.BackgroundTransparency = 1; C.TextXAlignment = Enum.TextXAlignment.Left; C.TextSize = 14
-    Note:TweenPosition(UDim2.new(1, -300, 1, -100), "Out", "Quint", 0.6)
-    task.wait(cfg.Duration or 3); Note:TweenPosition(UDim2.new(1, 20, 1, -100), "In", "Quint", 0.6); task.delay(0.6, function() Note:Destroy() end)
-end
-
 function Library:CreateWindow(Settings)
-    Library:Notify({Title = Settings.Name, Content = "Loading Components...", Duration = 2})
     local Main = Instance.new("ScreenGui", CoreGui); Main.Name = "GeminiLib"
     
     local MobileBtn = Instance.new("TextButton", Main)
@@ -79,14 +65,18 @@ function Library:CreateWindow(Settings)
         local order = 0
         local function getOrder() order = order + 1 return order end
 
-        -- // FIXED MISSING METHODS BELOW
         function Elements:CreateSection(text)
             local S = Instance.new("TextLabel", Page); S.Size = UDim2.new(1, -10, 0, 35); S.Text = "  " .. text:upper(); S.TextColor3 = Color3.fromRGB(180, 0, 255); S.Font = Enum.Font.GothamBold; S.BackgroundTransparency = 1; S.TextXAlignment = Enum.TextXAlignment.Left; S.LayoutOrder = getOrder(); S.TextSize = 15
         end
 
         function Elements:CreateDivider()
-            local DFrame = Instance.new("Frame", Page); DFrame.Size = UDim2.new(1, -10, 0, 5); DFrame.BackgroundTransparency = 1; DFrame.LayoutOrder = getOrder()
-            local D = Instance.new("Frame", DFrame); D.Size = UDim2.new(1, -20, 0, 2); D.Position = UDim2.new(0,10,0.5,-1); D.BackgroundColor3 = Color3.fromRGB(40, 40, 40); D.BorderSizePixel = 0
+            local D = Instance.new("Frame", Page); D.Size = UDim2.new(1, -20, 0, 2); D.BackgroundColor3 = Color3.fromRGB(40, 40, 40); D.BorderSizePixel = 0; D.LayoutOrder = getOrder()
+        end
+
+        function Elements:CreateParagraph(title, content)
+            local P = Instance.new("Frame", Page); P.Size = UDim2.new(1, -10, 0, 60); P.BackgroundColor3 = Color3.fromRGB(15, 15, 15); P.LayoutOrder = getOrder(); Instance.new("UICorner", P)
+            local T = Instance.new("TextLabel", P); T.Size = UDim2.new(1, -20, 0, 25); T.Position = UDim2.new(0, 10, 0, 5); T.Text = title; T.TextColor3 = Color3.fromRGB(180, 0, 255); T.Font = Enum.Font.GothamBold; T.TextSize = 14; T.BackgroundTransparency = 1; T.TextXAlignment = Enum.TextXAlignment.Left
+            local C = Instance.new("TextLabel", P); C.Size = UDim2.new(1, -20, 0, 30); C.Position = UDim2.new(0, 10, 0, 25); C.Text = content; C.TextColor3 = Color3.fromRGB(200, 200, 200); C.Font = Enum.Font.Gotham; C.TextSize = 12; C.BackgroundTransparency = 1; C.TextXAlignment = Enum.TextXAlignment.Left; C.TextWrapped = true
         end
 
         function Elements:CreateButton(cfg)
