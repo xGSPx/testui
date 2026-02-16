@@ -1,36 +1,46 @@
--- // GEMINI UI LIBRARY v2.2 (Ultimate Fix)
+-- // GEMINI UI LIBRARY v2.3 (Performance & Drag Fix)
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 
--- Cleanup old GUI to prevent stacking
+-- // 1. ANTI-MULTI INSTANCE (Cleanup Logic)
 if CoreGui:FindFirstChild("GeminiLib") then
     CoreGui.GeminiLib:Destroy()
 end
 
--- // UNIVERSAL DRAGGING FUNCTION
-local function MakeDraggable(frame)
-    local dragging, dragInput, dragStart, startPos
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
+-- // 2. UNIVERSAL DRAG SYSTEM
+local function Dragify(Frame)
+    local dragToggle = nil
+    local dragSpeed = 0.15 -- Smoothness
+    local dragStart = nil
+    local startPos = nil
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        TweenService:Create(Frame, TweenInfo.new(dragSpeed), {Position = position}):Play()
+    end
+
+    Frame.InputBegan:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            dragToggle = true
             dragStart = input.Position
-            startPos = frame.Position
+            startPos = Frame.Position
+
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragToggle = false
+                end
             end)
         end
     end)
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
+
     UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            if dragToggle then
+                update(input)
+            end
         end
     end)
 end
@@ -38,72 +48,65 @@ end
 function Library:CreateWindow(Settings)
     local Main = Instance.new("ScreenGui", CoreGui)
     Main.Name = "GeminiLib"
-    Main.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    Main.DisplayOrder = 100
 
-    -- // MAIN FRAME
     local MainFrame = Instance.new("Frame", Main)
     MainFrame.Name = "MainFrame"
     MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
     MainFrame.Size = UDim2.new(0, 500, 0, 350)
     MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
     MainFrame.BorderSizePixel = 0
-    MainFrame.ZIndex = 5
+    MainFrame.Active = true -- Critical for draggability
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
-    
-    MakeDraggable(MainFrame) -- Apply dragging to the whole window
+
+    -- Applying the Fix
+    Dragify(MainFrame)
 
     -- // NEON BORDER
     local Glow = Instance.new("Frame", MainFrame)
     Glow.Size = UDim2.new(1, 4, 1, 4)
     Glow.Position = UDim2.new(0, -2, 0, -2)
     Glow.BackgroundColor3 = Color3.fromRGB(180, 0, 255)
-    Glow.ZIndex = 4
+    Glow.ZIndex = 0
     Instance.new("UICorner", Glow).CornerRadius = UDim.new(0, 8)
 
-    -- // MOBILE TOGGLE BUTTON
-    local MobileToggle = Instance.new("TextButton", Main)
-    MobileToggle.Name = "Toggle"
-    MobileToggle.Size = UDim2.new(0, 45, 0, 45)
-    MobileToggle.Position = UDim2.new(0, 10, 0.5, -22)
-    MobileToggle.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    MobileToggle.Text = "G"
-    MobileToggle.TextColor3 = Color3.fromRGB(180, 0, 255)
-    MobileToggle.TextSize = 20
-    MobileToggle.ZIndex = 10 -- Ensure it's on top
-    Instance.new("UICorner", MobileToggle).CornerRadius = UDim.new(1, 0)
+    -- // MOBILE/PC TOGGLE BUTTON
+    local ToggleBtn = Instance.new("TextButton", Main)
+    ToggleBtn.Size = UDim2.new(0, 40, 0, 40)
+    ToggleBtn.Position = UDim2.new(0, 15, 0.5, -20)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    ToggleBtn.Text = "G"
+    ToggleBtn.TextColor3 = Color3.fromRGB(180, 0, 255)
+    ToggleBtn.TextSize = 20
+    Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
     
-    local BTNGlow = Instance.new("Frame", MobileToggle)
-    BTNGlow.Size = UDim2.new(1, 4, 1, 4)
-    BTNGlow.Position = UDim2.new(0, -2, 0, -2)
-    BTNGlow.BackgroundColor3 = Color3.fromRGB(180, 0, 255)
-    BTNGlow.ZIndex = 9
-    Instance.new("UICorner", BTNGlow).CornerRadius = UDim.new(1, 0)
-
-    -- Toggle Logic (Mobile Button + PC Key)
-    local function ToggleUI()
+    local function Toggle()
         MainFrame.Visible = not MainFrame.Visible
     end
+
+    ToggleBtn.MouseButton1Click:Connect(Toggle)
     
-    MobileToggle.MouseButton1Click:Connect(ToggleUI)
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.RightControl then ToggleUI() end
+    -- Fixed Keybind Logic
+    UserInputService.InputBegan:Connect(function(input, processed)
+        if not processed and input.KeyCode == Enum.KeyCode.RightControl then
+            Toggle()
+        end
     end)
 
     -- // SIDEBAR
     local Sidebar = Instance.new("Frame", MainFrame)
     Sidebar.Size = UDim2.new(0, 130, 1, 0)
     Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    Sidebar.ZIndex = 6
     Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
 
-    -- // DELETE BUTTON (Universal Kill)
+    -- Universal Delete Button
     local KillBtn = Instance.new("TextButton", Sidebar)
     KillBtn.Size = UDim2.new(1, -10, 0, 30)
     KillBtn.Position = UDim2.new(0, 5, 1, -35)
-    KillBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    KillBtn.Text = "DELETE GUI"
+    KillBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 255) -- Purple Theme
+    KillBtn.BackgroundTransparency = 0.5
+    KillBtn.Text = "DESTROY"
     KillBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    KillBtn.ZIndex = 7
     Instance.new("UICorner", KillBtn)
     KillBtn.MouseButton1Click:Connect(function() Main:Destroy() end)
 
@@ -112,14 +115,12 @@ function Library:CreateWindow(Settings)
     TabHolder.Position = UDim2.new(0, 0, 0, 45)
     TabHolder.BackgroundTransparency = 1
     TabHolder.ScrollBarThickness = 0
-    TabHolder.ZIndex = 7
     Instance.new("UIListLayout", TabHolder).Padding = UDim.new(0, 5)
 
     local Container = Instance.new("Frame", MainFrame)
     Container.Size = UDim2.new(1, -140, 1, -20)
     Container.Position = UDim2.new(0, 135, 0, 10)
     Container.BackgroundTransparency = 1
-    Container.ZIndex = 6
 
     local Tabs = {}
     function Tabs:CreateTab(name)
@@ -128,7 +129,6 @@ function Library:CreateWindow(Settings)
         Page.BackgroundTransparency = 1
         Page.Visible = false
         Page.ScrollBarThickness = 0
-        Page.ZIndex = 7
         Instance.new("UIListLayout", Page).Padding = UDim.new(0, 5)
 
         local TabBtn = Instance.new("TextButton", TabHolder)
@@ -136,7 +136,6 @@ function Library:CreateWindow(Settings)
         TabBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
         TabBtn.Text = name
         TabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-        TabBtn.ZIndex = 8
         Instance.new("UICorner", TabBtn)
 
         TabBtn.MouseButton1Click:Connect(function()
@@ -145,6 +144,7 @@ function Library:CreateWindow(Settings)
         end)
 
         local Elements = {}
+        
         function Elements:CreateToggle(cfg)
             local Tgl = Instance.new("TextButton", Page)
             Tgl.Size = UDim2.new(1, -5, 0, 35)
@@ -152,8 +152,8 @@ function Library:CreateWindow(Settings)
             Tgl.Text = "  " .. cfg.Name
             Tgl.TextColor3 = Color3.fromRGB(255, 255, 255)
             Tgl.TextXAlignment = Enum.TextXAlignment.Left
-            Tgl.ZIndex = 9
             Instance.new("UICorner", Tgl)
+            
             local state = cfg.CurrentValue or false
             Tgl.MouseButton1Click:Connect(function()
                 state = not state
@@ -167,7 +167,6 @@ function Library:CreateWindow(Settings)
             DropFrame.Size = UDim2.new(1, -5, 0, 35)
             DropFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
             DropFrame.ClipsDescendants = true
-            DropFrame.ZIndex = 9
             Instance.new("UICorner", DropFrame)
 
             local DropBtn = Instance.new("TextButton", DropFrame)
@@ -176,7 +175,6 @@ function Library:CreateWindow(Settings)
             DropBtn.TextColor3 = Color3.fromRGB(180, 0, 255)
             DropBtn.TextXAlignment = Enum.TextXAlignment.Left
             DropBtn.BackgroundTransparency = 1
-            DropBtn.ZIndex = 10
 
             local open = false
             DropBtn.MouseButton1Click:Connect(function()
@@ -190,7 +188,6 @@ function Library:CreateWindow(Settings)
                 o.Text = opt
                 o.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
                 o.TextColor3 = Color3.fromRGB(255, 255, 255)
-                o.ZIndex = 11
                 o.MouseButton1Click:Connect(function()
                     DropBtn.Text = "  " .. cfg.Name .. " > " .. opt
                     cfg.Callback(opt)
